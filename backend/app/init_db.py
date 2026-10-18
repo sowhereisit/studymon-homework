@@ -48,11 +48,17 @@ def _E(sql):
 
 def _seed(cur):
     # 表名不带库前缀（MySQL 已 USE 当前库，sqlite 无库概念）
-    cur.execute(_E("SELECT id FROM parent_user WHERE phone=%s"), ("13800000000",))
+    seed_parent = os.getenv("PKM_PARENT_ID", "13800000000")
+    seed_password = os.getenv("PKM_PARENT_PASSWORD", "admin123")
+    seed_child_pin = os.getenv("PKM_CHILD_PIN", "1234")
+    if os.getenv("PKM_CLOUD_MODE") == "1":
+        if len(seed_parent) < 3 or len(seed_password) < 12 or not (4 <= len(seed_child_pin) <= 8 and seed_child_pin.isdigit()) or seed_child_pin in ("1234", "0000", "1111"):
+            raise RuntimeError("Set PKM_PARENT_ID, PKM_PARENT_PASSWORD (12+ chars), and unique PKM_CHILD_PIN (4-8 digits) before initializing.")
+    cur.execute(_E("SELECT id FROM parent_user WHERE phone=%s"), (seed_parent,))
     r = cur.fetchone()
     if not r:
         cur.execute(_E("INSERT INTO parent_user(phone,password) VALUES(%s,%s)"),
-                    ("13800000000", hash_pw("admin123")))
+                    (seed_parent, hash_pw(seed_password)))
         pid = cur.lastrowid
     else:
         pid = _v(r, "id", 0)
@@ -60,7 +66,7 @@ def _seed(cur):
     r = cur.fetchone()
     if not r:
         cur.execute(_E("INSERT INTO student_user(parent_id,student_name,pin,current_region_id) "
-                       "VALUES(%s,%s,%s,1)"), (pid, "小训练家", hash_pw("1234")))
+                       "VALUES(%s,%s,%s,1)"), (pid, "小训练家", hash_pw(seed_child_pin)))
         sid = cur.lastrowid
     else:
         sid = _v(r, "id", 0)
@@ -113,7 +119,7 @@ def _seed_tokens(cur, saved=None):
     if _v(cur.fetchone(), 0, 0):
         return
     import secrets as _sec
-    cur.execute(_E("SELECT id FROM parent_user WHERE phone=%s"), ("13800000000",))
+    cur.execute(_E("SELECT id FROM parent_user WHERE phone=%s"), (os.getenv("PKM_PARENT_ID", "13800000000"),))
     pid = _v(cur.fetchone(), "id", 0)
     cur.execute(_E("SELECT id FROM student_user WHERE parent_id=%s LIMIT 1"), (pid,))
     sid = _v(cur.fetchone(), "id", 0)
@@ -147,6 +153,8 @@ class _Wrap:
 
 def main():
     if ENGINE == "sqlite":
+        if os.environ.get("PKM_CLOUD_MODE") == "1" and os.path.exists(db.DBFILE):
+            raise RuntimeError("Cloud mode refuses to reset an existing SQLite database")
         saved_tokens = {}
         if os.path.exists(db.DBFILE):
             # 原地重置：删表重建（避免删除文件触发回收站拦截，也避免服务连接持有文件句柄）
@@ -219,7 +227,7 @@ def main():
         build_evo(dbfile=db.DBFILE, apply=True)
     except Exception as e:
         print("WARN 附加表生成失败(可稍后手动跑 build_profile/build_evolution):", e)
-    print(f"INIT OK ({ENGINE})  parent=13800000000/admin123  student=孩子小名/1234")
+    print(f"INIT OK ({ENGINE}). Account credentials are not printed.")
 
 if __name__ == "__main__":
     main()

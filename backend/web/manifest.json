@@ -1,8 +1,8 @@
 {
-  "name": "宝可梦作业激励 · 关都篇",
-  "short_name": "宝可梦作业",
+  "name": "Studymon Family",
+  "short_name": "Studymon",
   "description": "作业打卡练级，周末道馆挑战与野生捕获",
-  "start_url": "/?k={设备令牌}",
+  "start_url": "/family",
   "scope": "/",
   "display": "standalone",
   "background_color": "#fff7ed",
