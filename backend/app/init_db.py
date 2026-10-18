@@ -52,7 +52,7 @@ def _seed(cur):
     r = cur.fetchone()
     if not r:
         cur.execute(_E("INSERT INTO parent_user(phone,password) VALUES(%s,%s)"),
-                    ("13800000000", hash_pw("admin123")))
+                    ("13800000000", hash_pw(os.environ.get("PKM_PARENT_PASSWORD", "admin123"))))
         pid = cur.lastrowid
     else:
         pid = _v(r, "id", 0)
@@ -147,6 +147,8 @@ class _Wrap:
 
 def main():
     if ENGINE == "sqlite":
+        if os.environ.get("PKM_CLOUD_MODE") == "1" and os.path.exists(db.DBFILE):
+            raise RuntimeError("Cloud mode refuses to reset an existing SQLite database")
         saved_tokens = {}
         if os.path.exists(db.DBFILE):
             # 原地重置：删表重建（避免删除文件触发回收站拦截，也避免服务连接持有文件句柄）
@@ -219,7 +221,7 @@ def main():
         build_evo(dbfile=db.DBFILE, apply=True)
     except Exception as e:
         print("WARN 附加表生成失败(可稍后手动跑 build_profile/build_evolution):", e)
-    print(f"INIT OK ({ENGINE})  parent=13800000000/admin123  student=孩子小名/1234")
+    print(f"INIT OK ({ENGINE}); change the seed child PIN immediately.")
 
 if __name__ == "__main__":
     main()
