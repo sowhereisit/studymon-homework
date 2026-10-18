@@ -32,6 +32,10 @@ def health():
     return {"ok": True}
 
 if os.path.isdir(STATIC_DIR):
+    @app.get("/family")
+    @app.get("/family/")
+    def family_page():
+        return FileResponse(os.path.join(STATIC_DIR, "family.html"))
     @app.get("/parent")
     @app.get("/parent/")
     def parent_page():
