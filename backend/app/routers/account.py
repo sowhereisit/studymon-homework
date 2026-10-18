@@ -225,9 +225,8 @@ def regen_kid_token(sid: int, tok=Depends(parent_auth)):
 @router.put("/parent/self")
 def update_parent(body: dict, tok=Depends(parent_auth)):
     if body.get("password"):
-        if not body.get("old_password") or not db.q(
-                "SELECT id FROM parent_user WHERE id=%s AND password=%s",
-                (tok["uid"], hash_pw(body["old_password"]))):
+        saved = db.q("SELECT password FROM parent_user WHERE id=%s", (tok["uid"],))
+        if not body.get("old_password") or not saved or not verify_pw(str(body["old_password"]), saved[0]["password"]):
             raise HTTPException(400, "原密码错误")
         if len(str(body["password"])) < 6:
             raise HTTPException(400, "新密码至少 6 位")
