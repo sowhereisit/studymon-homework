@@ -6,6 +6,9 @@ from pathlib import Path
 
 def start():
     os.environ["PKM_DB_ENGINE"] = "sqlite"
+    os.environ["PKM_CLOUD_MODE"] = "1"
+    if not os.getenv("PKM_SQLITE_FILE", "").startswith("/data/"):
+        raise SystemExit("Set PKM_SQLITE_FILE=/data/pkm.sqlite3 and mount a persistent Railway volume at /data.")
     from app.config import DATA_DIR
     from app.db import DBFILE
     secret = os.getenv("PKM_JWT_SECRET", "")
