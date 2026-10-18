@@ -11,6 +11,8 @@ DB = dict(
 )
 
 JWT_SECRET = os.environ.get("PKM_JWT_SECRET", "dev-only-secret-change-me")
+if os.environ.get("PKM_CLOUD_MODE") == "1" and len(JWT_SECRET) < 32:
+    raise RuntimeError("PKM_JWT_SECRET must be at least 32 characters in cloud mode")
 JWT_DAYS = 30
 STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web")
 SQL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sql")
