@@ -16,6 +16,8 @@ def start():
         raise SystemExit("Set a unique PKM_JWT_SECRET (at least 32 characters).")
     if os.getenv("PKM_PARENT_PASSWORD", "") in ("", "admin123") or len(os.getenv("PKM_PARENT_PASSWORD", "")) < 12:
         raise SystemExit("Set PKM_PARENT_PASSWORD to a unique password of at least 12 characters.")
+    if not os.getenv("PKM_PARENT_ID") or not os.getenv("PKM_CHILD_PIN") or os.getenv("PKM_CHILD_PIN") in ("1234","0000","1111"):
+        raise SystemExit("Set PKM_PARENT_ID and a unique PKM_CHILD_PIN before deploying.")
     if not Path(DATA_DIR, "00_schema.sql").is_file():
         raise SystemExit("Missing generated assets/out/00_schema.sql; follow ASSETS_GUIDE.md before deployment.")
     dbfile = Path(DBFILE)
