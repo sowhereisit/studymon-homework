@@ -44,7 +44,9 @@ def student_auth(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
 
 def kid_auth(cred: HTTPAuthorizationCredentials = Depends(_bearer)) -> dict:
     """孩子端写操作：JWT 或 平板设备令牌（?k= 免登录）均可"""
-    if cred and cred.credentials[:4] != "kid_":
+    if not cred:
+        raise HTTPException(401, "请先登录")
+    if cred.credentials[:4] != "kid_":
         return student_auth(cred)
     rows = db.q("SELECT role, ref_id FROM device_token WHERE token=%s AND enabled=1",
                 (cred.credentials,))
